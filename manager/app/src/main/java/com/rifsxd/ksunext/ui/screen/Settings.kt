@@ -113,6 +113,8 @@ fun SettingScreen(navigator: DestinationsNavigator) {
         }
         val loadingDialog = rememberLoadingDialog()
         val shrinkDialog = rememberConfirmDialog()
+        val restoreDialog = rememberConfirmDialog()
+        val backupDialog = rememberConfirmDialog()
 
         Column(
             modifier = Modifier
@@ -207,6 +209,11 @@ fun SettingScreen(navigator: DestinationsNavigator) {
                             showWarningDialog = false
                             prefs.edit().putBoolean("use_overlay_fs", !useOverlayFs).apply()
                             useOverlayFs = !useOverlayFs
+                            if (useOverlayFs) {
+                                moduleBackup()
+                            } else {
+                                moduleMigration()
+                            }
                             if (isManager) install()
                             showRebootDialog = true
                         }) {
@@ -382,6 +389,54 @@ fun SettingScreen(navigator: DestinationsNavigator) {
                 )
             }
 
+            if (ksuVersion != null) {
+                val moduleBackup = stringResource(id = R.string.module_backup)
+                val backupMessage = stringResource(id = R.string.module_backup_message)
+                ListItem(
+                    leadingContent = {
+                        Icon(
+                            Icons.Filled.Backup,
+                            moduleBackup
+                        )
+                    },
+                    headlineContent = { Text(moduleBackup) },
+                    modifier = Modifier.clickable {
+                        scope.launch {
+                            val result = backupDialog.awaitConfirm(title = moduleBackup, content = backupMessage)
+                            if (result == ConfirmResult.Confirmed) {
+                                loadingDialog.withLoading {
+                                    moduleBackup()
+                                }
+                            }
+                        }
+                    }
+                )
+            }
+
+            if (ksuVersion != null) {
+                val moduleRestore = stringResource(id = R.string.module_restore)
+                val restoreMessage = stringResource(id = R.string.module_restore_message)
+                ListItem(
+                    leadingContent = {
+                        Icon(
+                            Icons.Filled.Restore,
+                            moduleRestore
+                        )
+                    },
+                    headlineContent = { Text(moduleRestore) },
+                    modifier = Modifier.clickable {
+                        scope.launch {
+                            val result = restoreDialog.awaitConfirm(title = moduleRestore, content = restoreMessage)
+                            if (result == ConfirmResult.Confirmed) {
+                                loadingDialog.withLoading {
+                                    moduleRestore()
+                                    showRebootDialog = true
+                                }
+                            }
+                        }
+                    }
+                )
+            }
 
             if (useOverlayFs) {
                 val shrink = stringResource(id = R.string.shrink_sparse_image)
