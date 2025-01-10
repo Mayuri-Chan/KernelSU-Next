@@ -96,6 +96,9 @@ fun SettingScreen(navigator: DestinationsNavigator) {
     val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
     val snackBarHost = LocalSnackbarHost.current
 
+    val isManager = Natives.becomeManager(ksuApp.packageName)
+    val ksuVersion = if (isManager) Natives.version else null
+
     Scaffold(
         topBar = {
             TopBar(
@@ -138,26 +141,30 @@ fun SettingScreen(navigator: DestinationsNavigator) {
             }
 
             val profileTemplate = stringResource(id = R.string.settings_profile_template)
-            ListItem(
-                leadingContent = { Icon(Icons.Filled.Fence, profileTemplate) },
-                headlineContent = { Text(profileTemplate) },
-                supportingContent = { Text(stringResource(id = R.string.settings_profile_template_summary)) },
-                modifier = Modifier.clickable {
-                    navigator.navigate(AppProfileTemplateScreenDestination)
-                }
-            )
+            if (ksuVersion != null) {
+                ListItem(
+                    leadingContent = { Icon(Icons.Filled.Fence, profileTemplate) },
+                    headlineContent = { Text(profileTemplate) },
+                    supportingContent = { Text(stringResource(id = R.string.settings_profile_template_summary)) },
+                    modifier = Modifier.clickable {
+                        navigator.navigate(AppProfileTemplateScreenDestination)
+                    }
+                )
+            }
 
             var umountChecked by rememberSaveable {
                 mutableStateOf(Natives.isDefaultUmountModules())
             }
-            SwitchItem(
-                icon = Icons.Filled.RemoveModerator,
-                title = stringResource(id = R.string.settings_umount_modules_default),
-                summary = stringResource(id = R.string.settings_umount_modules_default_summary),
-                checked = umountChecked
-            ) {
-                if (Natives.setDefaultUmountModules(it)) {
-                    umountChecked = it
+            if (ksuVersion != null) {
+                SwitchItem(
+                    icon = Icons.Filled.RemoveModerator,
+                    title = stringResource(id = R.string.settings_umount_modules_default),
+                    summary = stringResource(id = R.string.settings_umount_modules_default_summary),
+                    checked = umountChecked
+                ) {
+                    if (Natives.setDefaultUmountModules(it)) {
+                        umountChecked = it
+                    }
                 }
             }
 
@@ -177,14 +184,16 @@ fun SettingScreen(navigator: DestinationsNavigator) {
 
             var showWarningDialog by remember { mutableStateOf(false) }
 
-            SwitchItem(
-                icon = Icons.Filled.Build,
-                title = stringResource(id = R.string.use_overlay_fs),
-                summary = stringResource(id = R.string.use_overlay_fs_summary),
-                checked = useOverlayFs
-            ) {
-                if (!hasShownWarning.value) {
-                    showWarningDialog = true
+            if (ksuVersion != null) {
+                SwitchItem(
+                    icon = Icons.Filled.Build,
+                    title = stringResource(id = R.string.use_overlay_fs),
+                    summary = stringResource(id = R.string.use_overlay_fs_summary),
+                    checked = useOverlayFs
+                ) {
+                    if (!hasShownWarning.value) {
+                        showWarningDialog = true
+                    }
                 }
             }
 
